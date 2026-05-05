@@ -1,0 +1,46 @@
+version: '3.8'
+services:
+
+  # MQTT broker — replaces AWS IoT Core ───────────────────
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: sensorflow-mqtt
+    ports: ["1883:1883", "9001:9001"]
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    restart: unless-stopped
+
+  # S3-compatible object store — replaces Amazon S3 ────────
+  minio:
+    image: minio/minio:latest
+    container_name: sensorflow-minio
+    ports: ["9000:9000", "9090:9090"]
+    environment:
+      MINIO_ROOT_USER: sensorflow
+      MINIO_ROOT_PASSWORD: sensorflow123
+    command: server /data --console-address ':9090'
+    volumes: [minio_data:/data]
+    restart: unless-stopped
+
+  # Dashboard — same as Amazon Managed Grafana ────────────
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: sensorflow-grafana
+    ports: ["3000:3000"]
+    environment: {GF_SECURITY_ADMIN_PASSWORD: admin}
+    volumes: [grafana_data:/var/lib/grafana]
+    restart: unless-stopped
+
+  # BI tool — replaces Amazon QuickSight ──────────────────
+  superset:
+    image: apache/superset:latest
+    container_name: sensorflow-superset
+    ports: ["8088:8088"]
+    environment: {SUPERSET_SECRET_KEY: sensorflow-local-secret}
+    volumes: [superset_data:/app/superset_home]
+    restart: unless-stopped
+
+volumes:
+  minio_data:
+  grafana_data:
+  superset_data:

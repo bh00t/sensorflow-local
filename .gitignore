@@ -1,0 +1,18 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Generated data — do not commit
+data/sensorflow.db
+data/dlq.jsonl
+data/grafana/
+data/*.html
+
+# Secrets
+.env
+
+# IDE
+.vscode/settings.jsonsrc/etl/jars/*.jar
