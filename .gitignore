@@ -15,4 +15,5 @@ data/*.html
 .env
 
 # IDE
-.vscode/settings.jsonsrc/etl/jars/*.jar
+.vscode/settings.json
+src/etl/jars/*.jar
