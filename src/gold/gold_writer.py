@@ -94,30 +94,35 @@ con.execute("""
         (3,'Plant-C','Plant Gamma','Bangalore','Karnataka')
 """ )
 
-# Generate 730 days (2025–2026) using DuckDB range function
+# Generate 1096 days (2024–2026) using DuckDB range function
+# Start from 2024 to match the AWS Athena dim_date and support any migrated data
 con.execute("""
     INSERT OR IGNORE INTO dim_date
     SELECT CAST(strftime(dt,'%Y%m%d') AS INTEGER) AS date_sk,
            dt AS full_date, year(dt), month(dt), day(dt),
            dayofweek(dt), dayofweek(dt) IN (0,6) AS is_weekend
-    FROM (SELECT range AS dt FROM range(DATE '2025-01-01', DATE '2027-01-01', INTERVAL 1 DAY))
+    FROM (SELECT range AS dt FROM range(DATE '2024-01-01', DATE '2027-01-01', INTERVAL 1 DAY))
 """ )
 
-# ── LOAD FACT from Silver Parquet ────────────────────────────
-# We use DISTINCT ON (p.message_id) to deduplicate the source files 
-# on the fly, since running PySpark multiple times in "append" mode 
-# created duplicate files in S3.
+# ── LOAD FACT from Silver Parquet ─────────────────────────────────────────────
+# IDEMPOTENCY LAYER 2: INSERT OR IGNORE on reading_id (PRIMARY KEY).
+# If reading_id already exists, DuckDB silently skips it — re-runs are safe.
+#
+# IMPORTANT: this is a safety net, not the primary guard.
+# The real fix is Phase 02 dynamic partition overwrite keeping Silver clean.
+# If Silver has append-mode duplicates with different reading_ids, INSERT OR IGNORE
+# will NOT catch them — duplicates load and aggregations become wrong.
+# Always verify Silver idempotency (Phase 02 verify step) before running Gold.
 con.execute("""
     INSERT OR IGNORE INTO fact_sensor_readings
-    SELECT DISTINCT ON (p.message_id) 
-           p.message_id, dm.machine_sk, ds.sensor_sk,
+    SELECT p.message_id, dm.machine_sk, ds.sensor_sk,
            p.reading_value, p.reading_ts, p.machine_id,
            p.sensor_type, p.status, p.shift, p.is_anomaly,
            p._ingested_at, current_timestamp
     FROM read_parquet('s3://sensorflow-local/processed/**/*.parquet') p
     JOIN dim_machine dm ON dm.machine_id  = p.machine_id
     JOIN dim_sensor  ds ON ds.sensor_type = p.sensor_type
-""")
+""" )
 
 n = con.execute("SELECT COUNT(*) FROM fact_sensor_readings").fetchone()[0]
 print(f"Gold FACT loaded: {n} rows")
