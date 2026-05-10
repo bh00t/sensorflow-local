@@ -28,7 +28,10 @@ services:
     container_name: sensorflow-grafana
     ports: ["3000:3000"]
     environment: {GF_SECURITY_ADMIN_PASSWORD: admin}
-    volumes: [grafana_data:/var/lib/grafana]
+    volumes:
+      - grafana_data:/var/lib/grafana
+      # Mount custom grafana.ini so allow_local_mode survives restarts
+      - ./grafana.ini:/etc/grafana/grafana.ini
     restart: unless-stopped
 
   # BI tool — replaces Amazon QuickSight ──────────────────

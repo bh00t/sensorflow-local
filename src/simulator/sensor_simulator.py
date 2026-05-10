@@ -19,12 +19,12 @@ SENSORS = {
 }
 
 # ── Simulator mode: change this to test different scenarios ─
-MODE = "ANOMALY"      # NORMAL | ANOMALY | FAILURE
+MODE = "FAILURE"      # NORMAL | ANOMALY | FAILURE
 SILENT_MACHINE = "MACHINE_03"  # goes silent in FAILURE mode
 
 def get_value(sensor_type, mode):
     s = SENSORS[sensor_type]
-    if mode == "ANOMALY" and random.random() < 0.05:  # ~5% anomaly rate
+    if mode == "ANOMALY" and random.random() < 0.25:  # ~5% anomaly rate
         return str(round(s["anomaly"] * random.uniform(1.01, 1.15), 2))
     return str(round(random.uniform(s["min"], s["max"]), 2))
     # NOTE: value is a STRING — mirrors real IoT device behaviour

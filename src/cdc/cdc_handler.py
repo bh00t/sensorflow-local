@@ -27,7 +27,7 @@ def on_message(client, userdata, msg):
         SEEN_IDS.add(rid)
         con = duckdb.connect(DB_PATH)  # open only for this insert, then release
         con.execute(
-            "INSERT OR IGNORE INTO anomaly_log VALUES (?,?,?,?,?,?)",
+            "INSERT OR IGNORE INTO anomaly_log (reading_id, machine_id, sensor_type, reading_value, status, reading_ts) VALUES (?,?,?,?,?,?)",
             [rid, data["machine_id"], data["sensor_type"],
              float(data["value"]), data["status"], data["ts"]]
         )
