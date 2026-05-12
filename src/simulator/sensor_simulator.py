@@ -69,7 +69,7 @@ def simulate():
                         "ts":           datetime.now(timezone.utc).isoformat(),
                         "firmware_ver": "v2.1.4"
                     }
-                    client.publish("sensorflow/readings", json.dumps(msg))
+                    client.publish("sensorflow/readings", json.dumps(msg), qos=1)
             time.sleep(5)
     except KeyboardInterrupt:
         print("Simulator stopped")

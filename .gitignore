@@ -17,3 +17,6 @@ data/*.html
 # IDE
 .vscode/settings.json
 src/etl/jars/*.jar
+
+# logs
+logs/*.log
